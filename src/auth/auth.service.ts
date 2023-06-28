@@ -1,17 +1,10 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 import { Token } from 'src/schemas/token.schema'
+import { JwtPayload } from 'src/types'
 import { UsersService } from 'src/users/users.service'
-
-interface JwtPayload {
-  _id: string
-  name: string
-  userName: string
-  email: string
-  mode: string
-}
 
 interface JwtParams {
   _id: Types.ObjectId | string
@@ -54,6 +47,10 @@ export class AuthService {
   }
 
   async verifyRefreshToken(token: string) {
+    const deletionData = await this.tokenModel.deleteOne({ token })
+
+    if (!deletionData.deletedCount) throw new UnauthorizedException()
+
     return await this.jwtService.verifyAsync<JwtPayload>(token, {
       secret: process.env.JWT_REFRESH_SECRET,
     })
@@ -64,7 +61,7 @@ export class AuthService {
 
     return await this.jwtService.signAsync(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: '2m',
+      expiresIn: '1h',
     })
   }
 

@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator'
-import { IsEmailTaken, IsUserNameTaken } from './user.validations'
+import { IsEmailTaken, IsUserNameTaken } from './decorators'
+import { InjectUserToBody, InjectUserToParam } from 'src/decorators/decorators'
 
 export class UserDto {
   @IsNotEmpty({ message: 'Заповніть всі поля' })

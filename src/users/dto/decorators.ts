@@ -7,13 +7,14 @@ import {
   registerDecorator,
 } from 'class-validator'
 import { UsersService } from 'src/users/users.service'
+import { ExtendedValidationArguments, USER_INJECTION } from 'src/decorators/decorators'
 
 @ValidatorConstraint({ name: 'IsEmailTaken', async: true })
 @Injectable()
 export class IsEmailTakenValidation implements ValidatorConstraintInterface {
   constructor(private readonly userService: UsersService) {}
 
-  async validate(value: string) {
+  async validate(value: string, args: ExtendedValidationArguments) {
     const user = await this.userService.findOneByEmail(value, { activated: true })
 
     if (user) {
@@ -45,8 +46,11 @@ export function IsEmailTaken(validationOptions?: ValidationOptions) {
 export class IsUserNameTakenValidation implements ValidatorConstraintInterface {
   constructor(private readonly userService: UsersService) {}
 
-  async validate(value: string) {
-    const user = await this.userService.findOneByUserName(value, { activated: true })
+  async validate(value: string, args: ExtendedValidationArguments) {
+    const user = await this.userService.findOneByUserName(value, {
+      activated: true,
+      excludeId: args.object[USER_INJECTION] ? args.object[USER_INJECTION]._id : undefined,
+    })
 
     if (user) {
       return false
@@ -60,7 +64,7 @@ export class IsUserNameTakenValidation implements ValidatorConstraintInterface {
   }
 }
 
-export function IsUserNameTaken(validationOptions?: ValidationOptions) {
+export function IsUserNameTaken(validationOptions?: ValidationOptions, ...arg: any) {
   return function (object: Record<string, any>, propertyName: string): void {
     registerDecorator({
       name: 'IsUserExists',
