@@ -8,6 +8,13 @@ import { AuthModule } from './auth/auth.module'
 import { UsersModule } from './users/users.module'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
+import { DocumentsModule } from './documents/documents.module'
+import { AccessModule } from './access/access.module'
+import { CollaboratorsModule } from './collaborators/collaborators.module'
+import { FoldersModule } from './folders/folders.module'
+import { RecordsModule } from './records/records.module'
+import { HoldersModule } from './holder/holders.module'
+import { BookmarksModule } from './bookmarks/bookmarks.module'
 
 @Module({
   imports: [
@@ -20,6 +27,13 @@ import { join } from 'path'
     UsersModule,
     MailModule,
     AuthModule,
+    DocumentsModule,
+    AccessModule,
+    CollaboratorsModule,
+    FoldersModule,
+    RecordsModule,
+    HoldersModule,
+    BookmarksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

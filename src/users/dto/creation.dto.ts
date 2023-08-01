@@ -1,6 +1,5 @@
-import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator'
+import { IsEmail, IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator'
 import { IsEmailTaken, IsUserNameTaken } from './decorators'
-import { InjectUserToBody, InjectUserToParam } from 'src/decorators/decorators'
 
 export class UserDto {
   @IsNotEmpty({ message: 'Заповніть всі поля' })
@@ -9,9 +8,10 @@ export class UserDto {
   name: string
 
   @IsNotEmpty({ message: 'Заповніть всі поля' })
-  @MinLength(2, { message: "Ім'я користувача повинно містити принанні 2 символи" })
-  @MaxLength(30, { message: "Ім'я користувача повинно містити не більше 30 символів" })
-  @IsUserNameTaken({ message: 'Користувач з таки іменем користувача вже зареєстрований' })
+  @MinLength(2, { message: 'Нікнейм повинен містити принанні 2 символи' })
+  @MaxLength(30, { message: 'Нікнейм повинен містити не більше 30 символів' })
+  @IsUserNameTaken({ message: 'Користувач з таким нікнеймом вже зареєстрований' })
+  @Matches(/^[A-Za-z0-9._-]+$/i, { message: 'Допускаються лише цифри, букви латинського алфавіту, тире та прочерк' })
   userName: string
 
   @IsNotEmpty({ message: 'Заповніть всі поля' })

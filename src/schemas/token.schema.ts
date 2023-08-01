@@ -5,7 +5,7 @@ export type TokenDocument = HydratedDocument<Token>
 
 @Schema({ timestamps: true, versionKey: false })
 export class Token {
-  @Prop({ type: mongoose.Types.ObjectId, required: true, ref: 'User' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' })
   user: ObjectId
 
   @Prop({ type: String, required: true })
@@ -13,3 +13,21 @@ export class Token {
 }
 
 export const TokenSchema = SchemaFactory.createForClass(Token)
+
+TokenSchema.set('toJSON', {
+  virtuals: true,
+  transform: (document: TokenDocument, ret: Token & { _id: string }) => {
+    const { _id, ...token } = ret
+
+    return token
+  },
+})
+
+TokenSchema.set('toObject', {
+  virtuals: true,
+  transform: (document: TokenDocument, ret: Token & { _id: string }) => {
+    const { _id, ...token } = ret
+
+    return token
+  },
+})

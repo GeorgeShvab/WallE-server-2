@@ -21,8 +21,6 @@ import { ConfigModule } from '@nestjs/config'
       defaults: {
         from: '"WallE Service" walle-service@outlook.com',
       },
-
-      preview: true,
       template: {
         dir: join(__dirname, 'templates'),
         adapter: new HandlebarsAdapter(),

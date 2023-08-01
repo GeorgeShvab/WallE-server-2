@@ -13,21 +13,29 @@ import { diskStorage } from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { generateId } from 'src/utils/generateId'
+import { Holder, HolderSchema } from 'src/schemas/holder.schema'
+import { HoldersService } from 'src/holder/holders.service'
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    MongooseModule.forFeature([{ name: Token.name, schema: TokenSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Token.name, schema: TokenSchema },
+      { name: Holder.name, schema: HolderSchema },
+    ]),
     JwtModule.register({}),
     MulterModule.register({
       storage: diskStorage({
         destination: (req, file, cb) => {
-          console.log(path.join(__dirname, '..', '..', 'uploads'))
-          if (!fs.existsSync(path.join(__dirname, '..', '..', 'uploads'))) {
-            fs.mkdirSync(path.join(__dirname, '..', '..', 'uploads'))
+          if (!fs.existsSync(path.join(__dirname, '..', '..', 'static'))) {
+            fs.mkdirSync(path.join(__dirname, '..', '..', 'static'))
           }
 
-          cb(null, path.join(__dirname, '..', '..', 'uploads'))
+          if (!fs.existsSync(path.join(__dirname, '..', '..', 'static', 'uploads'))) {
+            fs.mkdirSync(path.join(__dirname, '..', '..', 'static', 'uploads'))
+          }
+
+          cb(null, path.join(__dirname, '..', '..', 'static', 'uploads'))
         },
         filename: (req, file, cb) => {
           const name = `${generateId()}.${file.originalname.split('.').reverse()[0]}`
@@ -37,7 +45,7 @@ import { generateId } from 'src/utils/generateId'
       }),
     }),
   ],
-  providers: [UsersService, AuthService, MailService, ...UserConstraint],
+  providers: [UsersService, AuthService, MailService, HoldersService, ...UserConstraint],
   controllers: [UsersController],
 })
 export class UsersModule {}

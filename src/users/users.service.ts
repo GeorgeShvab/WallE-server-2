@@ -6,6 +6,7 @@ import { User } from 'src/schemas/user.schema'
 import bcrypt from 'bcrypt'
 
 interface Options {
+  createdWithGoogle?: boolean
   activated?: boolean
   excludeId?: string
 }
@@ -19,12 +20,23 @@ export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(user: UserDto) {
-    return this.userModel.create({ ...user, password: await this.hashPassword(user.password) })
+    const registeredWithGoogleUser = await this.userModel.findOne({ email: user.email, createdWithGoogle: true })
+
+    if (!registeredWithGoogleUser) {
+      return this.userModel.create({ ...user, password: await this.hashPassword(user.password) })
+    } else {
+      return await this.userModel.findOneAndUpdate(
+        { email: user.email, createdWithGoogle: true },
+        { ...user, password: await this.hashPassword(user.password) },
+        { returnOriginal: false }
+      )
+    }
   }
 
   async findOneByEmail(email: string, options: Options = defaultOptions) {
     return this.userModel.findOne({
-      $and: [{ email, activated: options.activated }, options.excludeId ? { _id: { $ne: options.excludeId } } : {}],
+      email,
+      activated: options.activated,
     })
   }
 
@@ -53,11 +65,33 @@ export class UsersService {
   }
 
   async activateUser(_id: string) {
-    await this.userModel.updateOne({ _id }, { activated: true })
+    await this.userModel.updateOne({ _id }, { activated: true, createdWithGoogle: false })
   }
 
   async comparePasswords(password: string, hashedPassword: string) {
     return await bcrypt.compare(password, hashedPassword)
+  }
+
+  async createUserWithGoogle(body: Partial<User> & { name: string; userName: string; email: string }) {
+    return await this.userModel.create({ ...body, createdWithGoogle: true })
+  }
+
+  async isEmailAleradyRegistered(email: string) {
+    return !!(await this.userModel.findOne({ email, activated: true }))
+  }
+
+  async isUsernameAlreadyTaken(userName: string, options: Options = defaultOptions) {
+    return this.userModel.findOne({
+      $and: [
+        {
+          $or: [
+            { userName, activated: true },
+            { userName, createdWithGoogle: true },
+          ],
+        },
+        options.excludeId ? { _id: { $ne: options.excludeId } } : {},
+      ],
+    })
   }
 
   private async hashPassword(password: string) {

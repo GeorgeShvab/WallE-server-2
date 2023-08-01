@@ -4,14 +4,12 @@ import {
   Controller,
   Get,
   HttpCode,
-  HttpStatus,
   NotFoundException,
   Param,
   ParseFilePipeBuilder,
   Patch,
   Post,
   Query,
-  Req,
   UnauthorizedException,
   UploadedFile,
   UseGuards,
@@ -23,15 +21,16 @@ import { UserDto } from 'src/users/dto/creation.dto'
 import { JwtService } from '@nestjs/jwt'
 import AuthService from 'src/auth/auth.service'
 import { UserLoginDto } from 'src/users/dto/login.dto'
-import { JwtAuthGuard } from 'src/auth/auth.guard'
-import { Request } from 'express'
-import { InjectUserToBody } from 'src/decorators/decorators'
+import { JwtAuth, JwtAuthGuard } from 'src/auth/auth.guard'
 import { DataUpdationDto } from './dto/data-updation.dto'
 import { UpdatePasswordDto } from './dto/password-updation.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { User } from 'src/decorators/user'
 import { JwtPayload } from 'src/types'
 import { PasswordResetDto, RequestPasswordResetDto } from './dto/password-reset.dto'
+import { CheckUserNameDto } from './dto/check-username.dto'
+import { TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken'
+import { HoldersService } from 'src/holder/holders.service'
 
 @Controller()
 export class UsersController {
@@ -39,7 +38,8 @@ export class UsersController {
     private readonly mailService: MailService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly holdersService: HoldersService
   ) {}
 
   @Post('registration')
@@ -48,7 +48,10 @@ export class UsersController {
 
     const token = await this.signEmailConfirmationToken(String(user._id))
 
-    await this.mailService.sendConfirmationMail(user, token)
+    await Promise.all([
+      this.mailService.sendConfirmationMail(user, token),
+      this.holdersService.create(String(user._id)),
+    ])
 
     return {}
   }
@@ -57,25 +60,42 @@ export class UsersController {
   async login(@Body() { email, password }: UserLoginDto) {
     const user = await this.authService.validateUser(email, password)
 
-    if (!user) throw new BadRequestException()
+    if (!user) {
+      throw new BadRequestException({ email: 'Невірний емейл або пароль', password: 'Невірний емейл або пароль' })
+    }
 
-    return await this.authService.login(user)
+    return { ...(await this.authService.login(user)), user }
   }
 
   @HttpCode(200)
   @Post('registration/confirmation')
   async registrationConfirmation(@Query() { token }: { token: string }) {
-    const { id } = await this.verifyEmailConfirmationToken(token).catch(() => {
-      throw new BadRequestException('Час дії посилання сплив')
-    })
+    try {
+      const { id } = await this.verifyEmailConfirmationToken(token)
+      await this.usersService.activateUser(id)
 
-    const [user] = await Promise.all([this.usersService.findOneById(id), this.usersService.activateUser(id)])
+      const user = await this.usersService.findOneById(id)
 
-    return await this.authService.login(user)
+      return { ...(await this.authService.login(user)), user }
+    } catch (e) {
+      if (e instanceof TokenExpiredError) throw new BadRequestException('Час дії посилання сплив')
+
+      throw new BadRequestException('Посилання некоректне')
+    }
+  }
+
+  @Get('user/me')
+  @UseGuards(JwtAuthGuard)
+  async getMe(@User() { _id }: JwtPayload) {
+    const user = await this.usersService.findOneById(_id)
+
+    if (!user) throw new NotFoundException('Користувача не знайдено')
+
+    return user
   }
 
   @Get('user/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuth)
   async getUser(@Param() { id }: { id: string }) {
     const user = await this.usersService.findOneById(id)
 
@@ -83,6 +103,9 @@ export class UsersController {
 
     return user
   }
+
+  @Post('registration/check/username')
+  async checkUserName(@Body() body: CheckUserNameDto) {}
 
   @Patch('user/update/data')
   @UseGuards(JwtAuthGuard)
@@ -117,11 +140,13 @@ export class UsersController {
     )
     file: Express.Multer.File
   ) {
-    await this.usersService.updateOneById(user._id, { avatar: file ? `static/uploads/${file.filename}` : null })
+    await this.usersService.updateOneById(user._id, {
+      avatar: file ? `${process.env.SERVER_ADDRESS}/static/uploads/${file.filename}` : null,
+    })
 
     if (file) {
       return {
-        avatar: `static/uploads/${file.filename}`,
+        avatar: `${process.env.SERVER_ADDRESS}/static/uploads/${file.filename}`,
       }
     }
   }
@@ -139,17 +164,22 @@ export class UsersController {
 
   @Post('user/reset-password')
   async resetPassword(@Body() { token, password }: PasswordResetDto) {
-    const { email } = await this.verifyPasswordResetToken(token).catch(() => {
-      throw new BadRequestException('Час дії посилання сплив')
-    })
+    try {
+      const { email } = await this.verifyPasswordResetToken(token)
 
-    await this.usersService.updatePasswordByEmail(email, password)
+      await this.usersService.updatePasswordByEmail(email, password)
 
-    const user = await this.usersService.findOneByEmail(email)
+      const user = await this.usersService.findOneByEmail(email)
 
-    if (!user) throw new BadRequestException('Користувача не знайдено')
+      if (!user) throw new BadRequestException('Користувача не знайдено')
 
-    return await this.authService.login(user)
+      return await this.authService.login(user)
+    } catch (e: any) {
+      if (e instanceof TokenExpiredError) throw new BadRequestException('Час дії посилання сплив')
+      if (e instanceof JsonWebTokenError) throw new BadRequestException('Посилання некоректне')
+
+      throw e
+    }
   }
 
   private async signPasswordResetToken(email: string) {

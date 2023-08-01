@@ -15,7 +15,7 @@ export class IsEmailTakenValidation implements ValidatorConstraintInterface {
   constructor(private readonly userService: UsersService) {}
 
   async validate(value: string, args: ExtendedValidationArguments) {
-    const user = await this.userService.findOneByEmail(value, { activated: true })
+    const user = await this.userService.isEmailAleradyRegistered(value)
 
     if (user) {
       return false
@@ -47,8 +47,7 @@ export class IsUserNameTakenValidation implements ValidatorConstraintInterface {
   constructor(private readonly userService: UsersService) {}
 
   async validate(value: string, args: ExtendedValidationArguments) {
-    const user = await this.userService.findOneByUserName(value, {
-      activated: true,
+    const user = await this.userService.isUsernameAlreadyTaken(value, {
       excludeId: args.object[USER_INJECTION] ? args.object[USER_INJECTION]._id : undefined,
     })
 

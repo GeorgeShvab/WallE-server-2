@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator'
+import { IsEmail, IsNotEmpty, MaxLength, MinLength, Validate } from 'class-validator'
 
 export class RequestPasswordResetDto {
   @IsNotEmpty({ message: 'Вкажіть коректний емейл' })
@@ -12,6 +12,6 @@ export class PasswordResetDto {
   @MaxLength(100, { message: 'Пароль повинен містити не більше 100 символів' })
   password: string
 
-  @IsNotEmpty({ message: 'Вкажіть коректний емейл' })
+  @Validate(() => true)
   token: string
 }
