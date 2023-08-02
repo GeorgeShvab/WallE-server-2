@@ -153,7 +153,15 @@ export class DocumentsController {
         this.collaboratorsService.add(user._id, id),
       ])
 
-      await this.recordsService.add({ ...doc.toObject(), ...body, user: user._id, document: id })
+      await this.recordsService.add({
+        title: data.title,
+        text: data.text,
+        description: data.description,
+        markdown: data.markdown,
+        access: data.access,
+        user: user._id,
+        document: id,
+      })
 
       return data
     } else {
