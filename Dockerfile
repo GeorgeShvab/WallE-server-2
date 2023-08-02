@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY tsconfig*.json ./
 COPY package*.json ./
+COPY .env ./
+COPY client ./client
 
 RUN npm ci
 
@@ -16,6 +18,8 @@ FROM node:16-alpine as production
 WORKDIR /app
 
 COPY package*.json ./
+COPY .env ./
+COPY client ./client
 
 RUN npm ci --omit=dev
 
