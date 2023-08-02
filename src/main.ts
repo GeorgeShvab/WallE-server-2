@@ -29,8 +29,8 @@ async function bootstrap() {
       'http://192.168.31.166:3000',
       'http://192.168.31.166:8080',
       'http://localhost:8080',
-      'localhost:8080',
-      'localhost:3000',
+      "https://walle-en6twynp6a-uc.a.run.app",
+      "https://walle-en6twynp6a-uc.a.run.app:8080"
     ],
     credentials: true,
   })
