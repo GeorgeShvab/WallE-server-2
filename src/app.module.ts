@@ -24,6 +24,9 @@ import { BookmarksModule } from './bookmarks/bookmarks.module'
       rootPath: join(__dirname, '..', 'static'),
       serveRoot: '/static',
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'client'),
+    }),
     UsersModule,
     MailModule,
     AuthModule,

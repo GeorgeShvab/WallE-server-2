@@ -24,7 +24,14 @@ async function bootstrap() {
   app.setGlobalPrefix('api')
   app.use(cookieParser())
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://192.168.31.166:3000', 'localhost:3000'],
+    origin: [
+      'http://localhost:3000',
+      'http://192.168.31.166:3000',
+      'http://192.168.31.166:8080',
+      'http://localhost:8080',
+      'localhost:8080',
+      'localhost:3000',
+    ],
     credentials: true,
   })
   useContainer(app.select(AppModule), { fallbackOnErrors: true })
