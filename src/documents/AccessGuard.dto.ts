@@ -6,7 +6,10 @@ import { DocumentsService } from './documents.service'
 
 @Injectable()
 export class AccessGuard implements CanActivate {
-  constructor(private readonly accessService: AccessService, private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly accessService: AccessService,
+    private readonly documentsService: DocumentsService
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest()
@@ -23,10 +26,10 @@ export class AccessGuard implements CanActivate {
     ])
 
     if (
-      (document.access === 'private' ||
-        (document.access === 'restricted' && !access) ||
-        (document.access === 'partly-restricted' && !access && req.method !== 'GET')) &&
-      document.owner.toString() !== req?.user?._id
+      (document?.access === 'private' ||
+        (document?.access === 'restricted' && !access) ||
+        (document?.access === 'partly-restricted' && !access && req.method !== 'GET')) &&
+      document?.owner.toString() !== req?.user?._id
     ) {
       throw new ForbiddenException()
     }
