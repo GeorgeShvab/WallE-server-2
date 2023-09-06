@@ -6,6 +6,8 @@ COPY tsconfig*.json ./
 COPY package*.json ./
 COPY .env ./
 COPY client ./client
+COPY templates ./templates
+COPY static ./static
 
 RUN npm ci
 
@@ -20,6 +22,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY .env ./
 COPY client ./client
+COPY templates ./templates
+COPY static ./static
 
 RUN npm ci --omit=dev
 
