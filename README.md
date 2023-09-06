@@ -13,3 +13,5 @@ This app has two repositories, one for the client and the second for the backend
 I also wanted to make a landing page but changed my mind.
 
 You can visit the app here: https://walle-en6twynp6a-uc.a.run.app
+
+![Без імені](https://github.com/GeorgeShvab/WallE-server-2/assets/62070431/f667bd77-45a0-45e7-8df2-941f9da5c6fd)
