@@ -22,7 +22,7 @@ import { ConfigModule } from '@nestjs/config'
         from: '"WallE Service" walle-service@outlook.com',
       },
       template: {
-        dir: join(__dirname, 'templates'),
+        dir: join(__dirname, '../../templates'),
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,
@@ -30,7 +30,7 @@ import { ConfigModule } from '@nestjs/config'
       },
       options: {
         partials: {
-          dir: join(__dirname, 'templates/partials'),
+          dir: join(__dirname, '../../templates/partials'),
           options: {
             strict: true,
           },
